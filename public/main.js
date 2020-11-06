@@ -1,11 +1,12 @@
 const socket = io();
-
-const inboxPeople = document.querySelector(".inbox__people");
+// Initialize Variables
+const inboxPeople = document.querySelector(".chat_list");
 const inputField = document.querySelector(".message_form__input");
 const messageForm = document.querySelector(".message_form");
 const messageBox = document.querySelector(".messages__history");
 const fallback = document.querySelector(".fallback");
 
+// Setting a username
 let userName = "";
 
 const newUserConnected = (user) => {
@@ -21,16 +22,17 @@ const addToUsersBox = (userName) => {
 
   const userBox = `
     <div class="chat_ib ${userName}-userlist">
-      <h5>${userName}</h5>
+      <h5> ${userName} 🟢</h5>
     </div>
   `;
   inboxPeople.innerHTML += userBox;
 };
-
+// Sends a chat message
 const addNewMessage = ({ user, message }) => {
+  // Time the message was sent
   const time = new Date();
   const formattedTime = time.toLocaleString("en-US", { hour: "numeric", minute: "numeric" });
-
+// Message received from other users
   const receivedMsg = `
   <div class="incoming__message">
     <div class="received__message">
@@ -41,7 +43,7 @@ const addNewMessage = ({ user, message }) => {
       </div>
     </div>
   </div>`;
-
+// Message sent by this user
   const myMsg = `
   <div class="outgoing__message">
     <div class="sent__message">
@@ -58,6 +60,7 @@ const addNewMessage = ({ user, message }) => {
 // new user is created so we generate nickname and emit event
 newUserConnected();
 
+// Listening for a submit input from the user
 messageForm.addEventListener("submit", (e) => {
   e.preventDefault();
   if (!inputField.value) {
@@ -72,26 +75,27 @@ messageForm.addEventListener("submit", (e) => {
   inputField.value = "";
 });
 
+// Adds the chat typing message
 inputField.addEventListener("keyup", () => {
   socket.emit("typing", {
     isTyping: inputField.value.length > 0,
     nick: userName,
   });
 });
-
+// Receives new user emitted from the server
 socket.on("new user", function (data) {
   data.map((user) => addToUsersBox(user));
 });
-
+// Receives disconnected user emitted from the server
 socket.on("user disconnected", function (userName) {
   document.querySelector(`.${userName}-userlist`).remove();
 });
-
+// Receives chat message emitted from the server
 socket.on("chat message", function (data) {
   addNewMessage({ user: data.nick, message: data.message });
 });
 
-
+// Receives typing message emitted from the server
 socket.on("typing", function (data) {
   const { isTyping, nick } = data;
 
